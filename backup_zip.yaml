@@ -1,0 +1,17 @@
+---
+- name: Backup files from source folder to a tar.gz archive in the backup folder
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: /home/ubuntu/demobackup
+        state: directory
+        mode: '0755'
+
+    - name: Create tar.gz archive of the source directory
+      ansible.builtin.archive:
+        path: /home/ubuntu/demo
+        dest: /home/ubuntu/demobackup/backup_{{ ansible_date_time.date }}.tar.gz
+        format: gz
+        
