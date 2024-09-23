@@ -1,0 +1,26 @@
+---
+- name: Check if a user account is locked
+  hosts: localhost
+  become: yes
+  vars:
+    user_to_check: "pawan"  # Replace with the user you want to check
+
+  tasks:
+    - name: Get account status using passwd -S
+      ansible.builtin.command: "passwd -S {{ user_to_check }}"
+      register: passwd_status
+      ignore_errors: yes
+
+    - name: Display account status
+      ansible.builtin.debug:
+        var: passwd_status.stdout
+
+    - name: Check if user is locked
+      ansible.builtin.debug:
+        msg: "User {{ user_to_check }} is locked."
+      when: "' L ' in passwd_status.stdout"
+      
+    - name: Check if user is not locked
+      ansible.builtin.debug:
+        msg: "User {{ user_to_check }} is not locked."
+      when: "' L ' not in passwd_status.stdout"

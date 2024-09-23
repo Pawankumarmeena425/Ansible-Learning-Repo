@@ -1,0 +1,26 @@
+---
+- name: Check if a user's password has expired or is about to expire
+  hosts: localhost
+  become: yes
+  vars:
+    user_to_check: "rohit"  # Replace with the username to check
+
+  tasks:
+    - name: Get password expiration information for the user
+      ansible.builtin.command: "chage -l {{ user_to_check }}"
+      register: chage_output
+      ignore_errors: yes
+
+    - name: Display password expiration info
+      ansible.builtin.debug:
+        var: chage_output.stdout
+
+    - name: Check if password is expired
+      ansible.builtin.debug:
+        msg: "The password for user {{ user_to_check }} has expired."
+      when: "'Password expires' in chage_output.stdout and 'password must be changed' in chage_output.stdout"
+      
+    - name: Check when password will expire
+      ansible.builtin.debug:
+        msg: "The password for user {{ user_to_check }} will expire on {{ chage_output.stdout | regex_search('Password expires:\\s*(.*)', '\\1') }}"
+      when: "'Password expires' in chage_output.stdout and 'never' not in chage_output.stdout"

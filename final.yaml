@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  become: yes
+  gather_facts: false
+
+  vars:
+    user_to_check: "rohit"
+
+  tasks:
+
+  - name: Gather available local users
+    getent:
+      database: passwd
+
+  - name: Check if local user account '{{ user_to_check }}' exists
+    assert:
+      that:
+        - user_to_check in getent_passwd.keys()
+      fail_msg: "Given user not exists!"
+      success_msg: "Given user exists."
+  - name: Get password expiration information for the user
+    ansible.builtin.command: "chage -l {{ user_to_check }}"
+    register: chage_output
+    ignore_errors: yes
+
+  - name: Display password expiration info
+    ansible.builtin.debug:
+      var: chage_output.stdout
+
+  - name: Check if password is expired
+    ansible.builtin.debug:
+      msg: "The password for user {{ user_to_check }} has expired."
+    when: "'Password expires' in chage_output.stdout and 'password must be changed' in chage_output.stdout"
+
+  - name: Check when password will expire
+    ansible.builtin.debug:
+      msg: "The password for user {{ user_to_check }} will expire on {{ chage_output.stdout | regex_search('Password expires:\\s*(.*)', '\\1') }}"
+    when: "'Password expires' in chage_output.stdout and 'never' not in chage_output.stdout"
+
+
+  - name: Get account status using passwd -S
+    ansible.builtin.command: "passwd -S {{ user_to_check }}"
+    register: passwd_status
+    ignore_errors: yes
+
+  - name: Display account status
+    ansible.builtin.debug:
+      var: passwd_status.stdout
+
+  - name: Check if user is locked
+    ansible.builtin.debug:
+      msg: "User {{ user_to_check }} is locked."
+    when: "' L ' in passwd_status.stdout"
+
+  - name: Check if user is not locked
+    ansible.builtin.debug:
+      msg: "User {{ user_to_check }} is not locked."
+    when: "' L ' not in passwd_status.stdout"
