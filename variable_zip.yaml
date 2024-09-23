@@ -1,0 +1,23 @@
+---
+- name: Backup files using variables for source and destination
+  hosts: localhost
+  become: yes
+  vars:
+    source_directory: "/home/ubuntu/demo"
+    backup_directory: "/home/ubuntu/backupvariable"
+    archive_format: "tar.gz"
+    backup_file: "backup_{{ ansible_date_time.date }}.{{ archive_format }}"
+
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "{{ backup_directory }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create tar.gz archive of the source directory
+      ansible.builtin.archive:
+        path: "{{ source_directory }}/"
+        dest: "{{ backup_directory }}/{{ backup_file }}"
+        format: gz
