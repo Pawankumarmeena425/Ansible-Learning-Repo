@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: true
+  become_method: sudo
+  tasks:
+  - name: install SSM if REDHAT
+    dnf:
+      name: https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+      state: latest
+    when: ansible_os_family == "RedHat"
+
+  - name: Install Amazon SSM agent
+    community.general.snap:
+      name: amazon-ssm-agent
+    when: ansible_os_family == "Debian"
