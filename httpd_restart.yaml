@@ -1,0 +1,21 @@
+---
+- hosts: redhat
+  become: true
+  tasks:
+  - name: Install the latest version of httpd
+    ansible.builtin.dnf:
+      name: httpd
+      state: latest
+  - name: Start service httpd, if not started
+    ansible.builtin.service:
+      name: httpd
+      state: started
+  - name: Reload service httpd
+    ansible.builtin.service:
+      name: httpd
+      state: reloaded
+
+  - name: Restart service httpds
+    ansible.builtin.service:
+      name: httpds
+      state: restarted
